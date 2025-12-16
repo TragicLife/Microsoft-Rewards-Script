@@ -46,13 +46,7 @@ export default class BrowserFunc {
                 `Response keys: ${Object.keys(response.data || {}).join(', ')}`
             )
 
-            if (response.data?.dashboard) {
-                return response.data.dashboard as DashboardData
-            } else if (response.data?.userStatus) {
-                return response.data as DashboardData
-            } else {
-                throw new Error('Unexpected response structure: no dashboard data found')
-            }
+            return response.data.dashboard as DashboardData
         } catch (error) {
             this.bot.logger.info(
                 this.bot.isMobile,

@@ -106,13 +106,10 @@ class AxiosClient {
 
                 // Parse response data
                 let data: unknown = responseBody
-                const contentType = response.headers['content-type']
-                if (contentType && typeof contentType === 'string' && contentType.includes('application/json')) {
-                    try {
-                        data = JSON.parse(responseBody)
-                    } catch {
-                        // Keep as text if JSON parse fails
-                    }
+                try {
+                    data = JSON.parse(responseBody)
+                } catch {
+                    // Keep as text if JSON parse fails
                 }
 
                 // Create axios-compatible response
