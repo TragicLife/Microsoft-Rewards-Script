@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios'
+import { request } from 'undici'
 import PQueue from 'p-queue'
 import type { LogLevel } from './Logger'
 
@@ -22,19 +22,17 @@ function truncate(text: string) {
 export async function sendDiscord(discordUrl: string, content: string, level: LogLevel): Promise<void> {
     if (!discordUrl) return
 
-    const request: AxiosRequestConfig = {
-        method: 'POST',
-        url: discordUrl,
-        headers: { 'Content-Type': 'application/json' },
-        data: { content: truncate(content), allowed_mentions: { parse: [] } },
-        timeout: 10000
-    }
-
     await discordQueue.add(async () => {
         try {
-            await axios(request)
+            await request(discordUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: truncate(content), allowed_mentions: { parse: [] } }),
+                headersTimeout: 10000,
+                bodyTimeout: 10000
+            })
         } catch (err: any) {
-            const status = err?.response?.status
+            const status = err?.statusCode
             if (status === 429) return
         }
     })

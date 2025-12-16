@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios'
+import { request } from 'undici'
 import PQueue from 'p-queue'
 import type { WebhookNtfyConfig } from '../interface/Config'
 import type { LogLevel } from './Logger'
@@ -33,19 +33,17 @@ export async function sendNtfy(config: WebhookNtfyConfig, content: string, level
 
     const url = config.topic ? `${config.url}/${config.topic}` : config.url
 
-    const request: AxiosRequestConfig = {
-        method: 'POST',
-        url: url,
-        headers,
-        data: content,
-        timeout: 10000
-    }
-
     await ntfyQueue.add(async () => {
         try {
-            await axios(request)
+            await request(url, {
+                method: 'POST',
+                headers,
+                body: content,
+                headersTimeout: 10000,
+                bodyTimeout: 10000
+            })
         } catch (err: any) {
-            const status = err?.response?.status
+            const status = err?.statusCode
             if (status === 429) return
         }
     })

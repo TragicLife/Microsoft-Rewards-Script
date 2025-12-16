@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { request } from 'undici'
 import type { BrowserFingerprintWithHeaders } from 'fingerprint-generator'
 
 import type { ChromeVersion, EdgeVersion } from '../interface/UserAgentUtil'
@@ -43,16 +43,15 @@ export class UserAgentManager {
 
     async getChromeVersion(isMobile: boolean): Promise<string> {
         try {
-            const request = {
-                url: 'https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json',
+            const response = await request('https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 }
-            }
+            })
 
-            const response = await axios(request)
-            const data: ChromeVersion = response.data
+            const body = await response.body.json()
+            const data: ChromeVersion = body as ChromeVersion
             return data.channels.Stable.version
         } catch (error) {
             this.bot.logger.error(
@@ -66,16 +65,15 @@ export class UserAgentManager {
 
     async getEdgeVersions(isMobile: boolean) {
         try {
-            const request = {
-                url: 'https://edgeupdates.microsoft.com/api/products',
+            const response = await request('https://edgeupdates.microsoft.com/api/products', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 }
-            }
+            })
 
-            const response = await axios(request)
-            const data: EdgeVersion[] = response.data
+            const body = await response.body.json()
+            const data: EdgeVersion[] = body as EdgeVersion[]
             const stable = data.find(x => x.Product == 'Stable') as EdgeVersion
             return {
                 android: stable.Releases.find(x => x.Platform == 'Android')?.ProductVersion,

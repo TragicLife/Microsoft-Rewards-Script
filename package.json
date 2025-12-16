@@ -31,6 +31,7 @@
         "Cheerio"
     ],
     "devDependencies": {
+        "@eslint/js": "^9.39.2",
         "@types/ms": "^2.1.0",
         "@types/node": "^24.10.1",
         "@typescript-eslint/eslint-plugin": "^8.48.0",
@@ -38,9 +39,11 @@
         "eslint-plugin-modules-newline": "^0.0.6",
         "prettier": "^3.7.1",
         "rimraf": "^6.1.2",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.50.0"
     },
     "dependencies": {
+        "@typescript-eslint/parser": "^8.50.0",
         "axios": "^1.13.2",
         "axios-retry": "^4.5.0",
         "chalk": "^4.1.2",
@@ -54,6 +57,7 @@
         "otpauth": "^9.4.1",
         "p-queue": "^9.0.1",
         "patchright": "^1.57.0",
-        "ts-node": "^10.9.2"
+        "ts-node": "^10.9.2",
+        "undici": "^7.16.0"
     }
 }

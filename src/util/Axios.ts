@@ -1,42 +1,22 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import axiosRetry from 'axios-retry'
-import { HttpProxyAgent } from 'http-proxy-agent'
-import { HttpsProxyAgent } from 'https-proxy-agent'
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { ProxyAgent, request as undiciRequest } from 'undici'
 import { URL } from 'url'
 import type { AccountProxy } from '../interface/Account'
 
 class AxiosClient {
-    private instance: AxiosInstance
-    private account: AccountProxy
+    private readonly proxyAgent: ProxyAgent | null = null
+    private readonly account: AccountProxy
+    private readonly timeout: number = 20000
 
     constructor(account: AccountProxy) {
         this.account = account
 
-        this.instance = axios.create({
-            timeout: 20000
-        })
-
         if (this.account.url && this.account.proxyAxios) {
-            const agent = this.getAgentForProxy(this.account)
-            this.instance.defaults.httpAgent = agent
-            this.instance.defaults.httpsAgent = agent
+            this.proxyAgent = this.createProxyAgent(this.account)
         }
-
-        axiosRetry(this.instance, {
-            retries: 5,
-            retryDelay: axiosRetry.exponentialDelay,
-            shouldResetTimeout: true,
-            retryCondition: error => {
-                if (axiosRetry.isNetworkError(error)) return true
-                if (!error.response) return true
-
-                const status = error.response.status
-                return status === 429 || (status >= 500 && status <= 599)
-            }
-        })
     }
 
-    private getAgentForProxy(proxyConfig: AccountProxy): HttpProxyAgent<string> | HttpsProxyAgent<string> {
+    private createProxyAgent(proxyConfig: AccountProxy): ProxyAgent {
         const { url: baseUrl, port, username, password } = proxyConfig
 
         let urlObj: URL
@@ -46,43 +26,135 @@ class AxiosClient {
             try {
                 urlObj = new URL(`http://${baseUrl}`)
             } catch (error) {
-                throw new Error(`Invalid proxy URL format: ${baseUrl}`)
+                throw new Error(`Invalid proxy URL format: ${baseUrl}, error: ${(error as Error).message}. Initial error: ${(e as Error).message}`)
             }
         }
 
-        const protocol = urlObj.protocol.toLowerCase()
-        let proxyUrl: string
+        // Set port if provided
+        if (!urlObj.port && port) {
+            urlObj.port = port.toString()
+        }
 
-        if (username && password) {
+        // Set credentials if provided (undici handles this better than axios)
+        if (username?.trim() && password?.trim()) {
             urlObj.username = encodeURIComponent(username)
             urlObj.password = encodeURIComponent(password)
-            urlObj.port = port.toString()
-            proxyUrl = urlObj.toString()
-        } else {
-            proxyUrl = `${protocol}//${urlObj.hostname}:${port}`
         }
 
-        switch (protocol) {
-            case 'http:':
-                return new HttpProxyAgent(proxyUrl)
-            case 'https:':
-                return new HttpsProxyAgent(proxyUrl)
-            default:
-                throw new Error(`Unsupported proxy protocol: ${protocol}. Only HTTP(S) is supported!`)
-        }
+        const proxyUrl = urlObj.toString()
+
+        return new ProxyAgent({
+            uri: proxyUrl,
+            keepAliveTimeout: 10000,
+            keepAliveMaxTimeout: 10000
+        })
+    }
+
+    private async sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms))
     }
 
     public async request(config: AxiosRequestConfig, bypassProxy = false): Promise<AxiosResponse> {
-        if (bypassProxy) {
-            const bypassInstance = axios.create()
-            axiosRetry(bypassInstance, {
-                retries: 3,
-                retryDelay: axiosRetry.exponentialDelay
-            })
-            return bypassInstance.request(config)
+        const maxRetries = 5
+        let lastError: Error | null = null
+
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                const url = config.url!
+                const method = (config.method || 'GET').toUpperCase()
+
+                // Prepare headers
+                const headers: Record<string, string> = {}
+                if (config.headers) {
+                    for (const [key, value] of Object.entries(config.headers)) {
+                        if (value !== undefined && value !== null) {
+                            headers[key] = String(value)
+                        }
+                    }
+                }
+
+                // Prepare body
+                let body: string | undefined
+                if (config.data) {
+                    if (config.data instanceof URLSearchParams) {
+                        body = config.data.toString()
+                        if (!headers['content-type'] && !headers['Content-Type']) {
+                            headers['content-type'] = 'application/x-www-form-urlencoded'
+                        }
+                    } else if (typeof config.data === 'object') {
+                        body = JSON.stringify(config.data)
+                        if (!headers['content-type'] && !headers['Content-Type']) {
+                            headers['content-type'] = 'application/json'
+                        }
+                    } else {
+                        body = String(config.data)
+                    }
+                }
+
+                // Make request with undici
+                const response = await undiciRequest(url, {
+                    method,
+                    headers,
+                    body,
+                    dispatcher: bypassProxy ? undefined : this.proxyAgent || undefined,
+                    headersTimeout: this.timeout,
+                    bodyTimeout: this.timeout
+                })
+
+                // Read response body
+                const responseBody = await response.body.text()
+
+                // Parse response data
+                let data: string = responseBody
+                const contentType = response.headers['content-type']
+                if (contentType && typeof contentType === 'string' && contentType.includes('application/json')) {
+                    try {
+                        data = JSON.parse(responseBody)
+                    } catch {
+                        // Keep as text if JSON parse fails
+                    }
+                }
+
+                // Create axios-compatible response
+                const axiosResponse: AxiosResponse = {
+                    data,
+                    status: response.statusCode,
+                    statusText: '',
+                    headers: response.headers,
+                    config: config as never,
+                    request: undefined
+                }
+
+                // Check if we should retry on error status
+                if (response.statusCode === 429 || (response.statusCode >= 500 && response.statusCode <= 599)) {
+                    throw new Error(`HTTP ${response.statusCode}`)
+                }
+
+                return axiosResponse
+
+            } catch (error) {
+                lastError = error as Error
+
+                // Don't retry on client errors (4xx except 429)
+                if (error && typeof error === 'object' && 'message' in error) {
+                    const statusMatch = (error.message as string).match(/HTTP (\d+)/)
+                    if (statusMatch && statusMatch[1]) {
+                        const status = parseInt(statusMatch[1])
+                        if (status >= 400 && status < 500 && status !== 429) {
+                            throw error
+                        }
+                    }
+                }
+
+                // Exponential backoff
+                if (attempt < maxRetries - 1) {
+                    const delay = Math.min(1000 * Math.pow(2, attempt), 10000)
+                    await this.sleep(delay)
+                }
+            }
         }
 
-        return this.instance.request(config)
+        throw lastError || new Error('Request failed after retries')
     }
 }
 
