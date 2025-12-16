@@ -4,7 +4,7 @@ import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import type { MicrosoftRewardsBot } from '../index'
 import { saveSessionData } from '../util/Load'
 
-import type { Counters, DashboardData } from './../interface/DashboardData'
+import type { Counters, DashboardData } from '../interface/DashboardData'
 import type { AppUserData } from '../interface/AppUserData'
 import type { XboxDashboardData } from '../interface/XboxDashboardData'
 import type { AppEarnablePoints, BrowserEarnablePoints, MissingSearchPoints } from '../interface/Points'
@@ -39,7 +39,20 @@ export default class BrowserFunc {
             }
 
             const response = await this.bot.axios.request(request)
-            return response.data.dashboard as DashboardData
+
+            this.bot.logger.debug(
+                this.bot.isMobile,
+                'GET-DASHBOARD-DATA',
+                `Response keys: ${Object.keys(response.data || {}).join(', ')}`
+            )
+
+            if (response.data?.dashboard) {
+                return response.data.dashboard as DashboardData
+            } else if (response.data?.userStatus) {
+                return response.data as DashboardData
+            } else {
+                throw new Error('Unexpected response structure: no dashboard data found')
+            }
         } catch (error) {
             this.bot.logger.info(
                 this.bot.isMobile,
@@ -110,7 +123,7 @@ export default class BrowserFunc {
      * Get search point counters
      */
     async getSearchPoints(): Promise<Counters> {
-        const dashboardData = await this.getDashboardData() // Always fetch newest data
+        const dashboardData = await this.getDashboardData() // Always fetch the newest data
 
         return dashboardData.userStatus.counters
     }
