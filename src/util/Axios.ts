@@ -105,7 +105,7 @@ class AxiosClient {
                 const responseBody = await response.body.text()
 
                 // Parse response data
-                let data: string = responseBody
+                let data: unknown = responseBody
                 const contentType = response.headers['content-type']
                 if (contentType && typeof contentType === 'string' && contentType.includes('application/json')) {
                     try {

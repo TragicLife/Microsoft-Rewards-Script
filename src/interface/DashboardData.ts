@@ -279,7 +279,7 @@ export interface Description {
     metaDescription: string
 }
 
-export interface BingUfMachineTranslationPromo {}
+export type BingUfMachineTranslationPromo = object
 
 export interface CoachMarks {
     streaks: WelcomeTour
