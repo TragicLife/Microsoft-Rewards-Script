@@ -1,4 +1,5 @@
 import type { AxiosRequestConfig } from 'axios'
+import { randomBytes } from 'crypto'
 import type { Page } from 'patchright'
 import * as fs from 'fs'
 import path from 'path'
@@ -32,9 +33,10 @@ export class SearchOnBing extends Workers {
         )
 
         try {
-            this.cookieHeader = (this.bot.isMobile ? this.bot.cookies.mobile : this.bot.cookies.desktop)
-                .map((c: { name: string; value: string }) => `${c.name}=${c.value}`)
-                .join('; ')
+            this.cookieHeader = this.bot.browser.func.buildCookieHeader(
+                this.bot.isMobile ? this.bot.cookies.mobile : this.bot.cookies.desktop,
+                ['bing.com', 'live.com', 'microsoftonline.com']
+            )
 
             const fingerprintHeaders = { ...this.bot.fingerprint.headers }
             delete fingerprintHeaders['Cookie']
@@ -101,7 +103,10 @@ export class SearchOnBing extends Workers {
             try {
                 this.bot.logger.debug(this.bot.isMobile, 'SEARCH-ON-BING-SEARCH', `Processing query | query="${query}"`)
 
-                await this.bot.mainMobilePage.goto(this.bingHome)
+                const cvid = randomBytes(16).toString('hex')
+                const url = `${this.bingHome}/search?q=${encodeURIComponent(query)}&PC=U531&FORM=ANNTA1&cvid=${cvid}`
+
+                await this.bot.mainMobilePage.goto(url)
 
                 // Wait until page loaded
                 await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {})
@@ -232,7 +237,7 @@ export class SearchOnBing extends Workers {
             if (this.bot.config.searchOnBingLocalQueries) {
                 this.bot.logger.debug(this.bot.isMobile, 'SEARCH-ON-BING-QUERY', 'Using local queries config file')
 
-                const data = fs.readFileSync(path.join(__dirname, '../queries.json'), 'utf8')
+                const data = fs.readFileSync(path.join(__dirname, '../../bing-search-activity-queries.json'), 'utf8')
                 queries = JSON.parse(data)
 
                 this.bot.logger.debug(
@@ -250,7 +255,7 @@ export class SearchOnBing extends Workers {
                 // Fetch from the repo directly so the user doesn't need to redownload the script for the new activities
                 const response = await this.bot.axios.request({
                     method: 'GET',
-                    url: 'https://raw.githubusercontent.com/TheNetsky/Microsoft-Rewards-Script/refs/heads/v3/src/functions/queries.json'
+                    url: 'https://raw.githubusercontent.com/TheNetsky/Microsoft-Rewards-Script/refs/heads/v3/src/functions/bing-search-activity-queries.json'
                 })
                 queries = response.data
 

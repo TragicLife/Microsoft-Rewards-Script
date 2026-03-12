@@ -1,17 +1,13 @@
 import type { AxiosRequestConfig } from 'axios'
-import type { FindClippyPromotion } from '../../../interface/DashboardData'
 import { Workers } from '../../Workers'
+import { PromotionalItem } from '../../../interface/DashboardData'
 
-export class FindClippy extends Workers {
+export class DoubleSearchPoints extends Workers {
     private cookieHeader: string = ''
 
     private fingerprintHeader: { [x: string]: string } = {}
 
-    private gainedPoints: number = 0
-
-    private oldBalance: number = this.bot.userData.currentPoints
-
-    public async doFindClippy(promotion: FindClippyPromotion) {
+    public async doDoubleSearchPoints(promotion: PromotionalItem) {
         const offerId = promotion.offerId
         const activityType = promotion.activityType
 
@@ -19,7 +15,7 @@ export class FindClippy extends Workers {
             if (!this.bot.requestToken && this.bot.rewardsVersion === 'legacy') {
                 this.bot.logger.warn(
                     this.bot.isMobile,
-                    'FIND-CLIPPY',
+                    'DOUBLE-SEARCH-POINTS',
                     'Skipping: Request token not available, this activity requires it!'
                 )
                 return
@@ -37,13 +33,13 @@ export class FindClippy extends Workers {
 
             this.bot.logger.info(
                 this.bot.isMobile,
-                'FIND-CLIPPY',
-                `Starting Find Clippy | offerId=${offerId} | activityType=${activityType} | oldBalance=${this.oldBalance}`
+                'DOUBLE-SEARCH-POINTS',
+                `Starting Double Search Points | offerId=${offerId}`
             )
 
             this.bot.logger.debug(
                 this.bot.isMobile,
-                'FIND-CLIPPY',
+                'DOUBLE-SEARCH-POINTS',
                 `Prepared headers | cookieLength=${this.cookieHeader.length} | fingerprintHeaderKeys=${Object.keys(this.fingerprintHeader).length}`
             )
 
@@ -60,8 +56,8 @@ export class FindClippy extends Workers {
 
             this.bot.logger.debug(
                 this.bot.isMobile,
-                'FIND-CLIPPY',
-                `Prepared Find Clippy form data | offerId=${offerId} | hash=${promotion.hash} | timeZone=60 | activityAmount=1 | type=${activityType}`
+                'DOUBLE-SEARCH-POINTS',
+                `Prepared Double Search Points form data | offerId=${offerId} | hash=${promotion.hash} | timeZone=60 | activityAmount=1 | type=${activityType}`
             )
 
             const request: AxiosRequestConfig = {
@@ -78,53 +74,51 @@ export class FindClippy extends Workers {
 
             this.bot.logger.debug(
                 this.bot.isMobile,
-                'FIND-CLIPPY',
-                `Sending Find Clippy request | offerId=${offerId} | url=${request.url}`
+                'DOUBLE-SEARCH-POINTS',
+                `Sending Double Search Points request | offerId=${offerId} | url=${request.url}`
             )
 
             const response = await this.bot.axios.request(request)
 
             this.bot.logger.debug(
                 this.bot.isMobile,
-                'FIND-CLIPPY',
-                `Received Find Clippy response | offerId=${offerId} | status=${response.status}`
+                'DOUBLE-SEARCH-POINTS',
+                `Received Double Search Points response | offerId=${offerId} | status=${response.status}`
             )
 
-            const newBalance = await this.bot.browser.func.getCurrentPoints()
-            this.gainedPoints = newBalance - this.oldBalance
-
-            this.bot.logger.debug(
-                this.bot.isMobile,
-                'FIND-CLIPPY',
-                `Balance delta after Find Clippy | offerId=${offerId} | oldBalance=${this.oldBalance} | newBalance=${newBalance} | gainedPoints=${this.gainedPoints}`
+            const data = await this.bot.browser.func.getDashboardData()
+            const promotionalItem = data.promotionalItems.find(item =>
+                item.name.toLowerCase().includes('ww_banner_optin_2x')
             )
 
-            if (this.gainedPoints > 0) {
-                this.bot.userData.currentPoints = newBalance
-                this.bot.userData.gainedPoints = (this.bot.userData.gainedPoints ?? 0) + this.gainedPoints
-
-                this.bot.logger.info(
-                    this.bot.isMobile,
-                    'FIND-CLIPPY',
-                    `Found Clippy | offerId=${offerId} | status=${response.status} | gainedPoints=${this.gainedPoints} | newBalance=${newBalance}`,
-                    'green'
-                )
-            } else {
+            // If OK, should no longer be presernt in promotionalItems
+            if (promotionalItem) {
                 this.bot.logger.warn(
                     this.bot.isMobile,
-                    'FIND-CLIPPY',
-                    `Found Clippy but no points were gained | offerId=${offerId} | status=${response.status} | oldBalance=${this.oldBalance} | newBalance=${newBalance}`
+                    'DOUBLE-SEARCH-POINTS',
+                    `Unable to find or activate Double Search Points | offerId=${offerId} | status=${response.status}`
+                )
+            } else {
+                this.bot.logger.info(
+                    this.bot.isMobile,
+                    'DOUBLE-SEARCH-POINTS',
+                    `Activated Double Search Points | offerId=${offerId} | status=${response.status}`,
+                    'green'
                 )
             }
 
-            this.bot.logger.debug(this.bot.isMobile, 'FIND-CLIPPY', `Waiting after Find Clippy | offerId=${offerId}`)
+            this.bot.logger.debug(
+                this.bot.isMobile,
+                'DOUBLE-SEARCH-POINTS',
+                `Waiting after Double Search Points | offerId=${offerId}`
+            )
 
             await this.bot.utils.wait(this.bot.utils.randomDelay(5000, 10000))
         } catch (error) {
             this.bot.logger.error(
                 this.bot.isMobile,
-                'FIND-CLIPPY',
-                `Error in doFindClippy | offerId=${offerId} | message=${error instanceof Error ? error.message : String(error)}`
+                'DOUBLE-SEARCH-POINTS',
+                `Error in doDoubleSearchPoints | offerId=${offerId} | message=${error instanceof Error ? error.message : String(error)}`
             )
         }
     }

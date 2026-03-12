@@ -65,6 +65,12 @@
         "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
         "resolveJsonModule": true
     },
-    "include": ["src/**/*.ts", "src/accounts.json", "src/config.json", "src/functions/queries.json"],
+    "include": [
+        "src/**/*.ts",
+        "src/accounts.json",
+        "src/config.json",
+        "src/functions/bing-search-activity-queries.json",
+        "src/functions/search-queries.json"
+    ],
     "exclude": ["node_modules"]
 }
