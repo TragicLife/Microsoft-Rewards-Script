@@ -87,8 +87,7 @@ export class Search extends Workers {
                 } else {
                     stagnantLoop = 0
 
-                    const newBalance = Number(this.bot.userData.currentPoints ?? 0) + gainedPoints
-                    this.bot.userData.currentPoints = newBalance
+                    this.bot.userData.currentPoints = Number(this.bot.userData.currentPoints ?? 0) + gainedPoints
                     this.bot.userData.gainedPoints = (this.bot.userData.gainedPoints ?? 0) + gainedPoints
 
                     totalGainedPoints += gainedPoints
@@ -200,8 +199,8 @@ export class Search extends Workers {
                         } else {
                             stagnantLoop = 0
 
-                            const newBalance = Number(this.bot.userData.currentPoints ?? 0) + gainedPoints
-                            this.bot.userData.currentPoints = newBalance
+                            this.bot.userData.currentPoints =
+                                Number(this.bot.userData.currentPoints ?? 0) + gainedPoints
                             this.bot.userData.gainedPoints = (this.bot.userData.gainedPoints ?? 0) + gainedPoints
 
                             totalGainedPoints += gainedPoints

@@ -107,7 +107,7 @@ Edit `config.json` to customize behavior, or set `CONFIG_*` environment variable
 ### Core
 
 | Setting                    | Type    | Default                      | Description                           | Docker environment variable   |
-| -------------------------- | ------- | ---------------------------- | ------------------------------------- | ----------------------------- |
+|----------------------------|---------|------------------------------|---------------------------------------|-------------------------------|
 | `baseURL`                  | string  | `"https://rewards.bing.com"` | Microsoft Rewards base URL            |                               |
 | `sessionPath`              | string  | `"sessions"`                 | Directory to store browser sessions   |                               |
 | `headless`                 | boolean | `false`                      | Run browser invisibly                 | Always `true` in Docker       |
@@ -119,7 +119,7 @@ Edit `config.json` to customize behavior, or set `CONFIG_*` environment variable
 ### Workers
 
 | Setting                       | Type    | Default | Description                 | Docker environment variable        |
-| ----------------------------- | ------- | ------- | --------------------------- | ---------------------------------- |
+|-------------------------------|---------|---------|-----------------------------|------------------------------------|
 | `workers.doDailySet`          | boolean | `true`  | Complete daily set          | `CONFIG_WORKER_DAILY_SET`          |
 | `workers.doSpecialPromotions` | boolean | `true`  | Complete special promotions | `CONFIG_WORKER_SPECIAL_PROMOTIONS` |
 | `workers.doMorePromotions`    | boolean | `true`  | Complete more promotions    | `CONFIG_WORKER_MORE_PROMOTIONS`    |
@@ -133,7 +133,7 @@ Edit `config.json` to customize behavior, or set `CONFIG_*` environment variable
 ### Search Settings
 
 | Setting                                | Type     | Default                                      | Description                         | Docker environment variable    |
-| -------------------------------------- | -------- | -------------------------------------------- | ----------------------------------- | ------------------------------ |
+|----------------------------------------|----------|----------------------------------------------|-------------------------------------|--------------------------------|
 | `searchSettings.scrollRandomResults`   | boolean  | `false`                                      | Scroll randomly on results          | `CONFIG_SEARCH_SCROLL_RANDOM`  |
 | `searchSettings.clickRandomResults`    | boolean  | `false`                                      | Click random links                  | `CONFIG_SEARCH_CLICK_RANDOM`   |
 | `searchSettings.parallelSearching`     | boolean  | `true`                                       | Run searches in parallel            | `CONFIG_SEARCH_PARALLEL`       |
@@ -147,7 +147,7 @@ Edit `config.json` to customize behavior, or set `CONFIG_*` environment variable
 ### Logging
 
 | Setting                          | Type     | Default                | Description                       | Docker environment variable    |
-| -------------------------------- | -------- | ---------------------- | --------------------------------- | ------------------------------ |
+|----------------------------------|----------|------------------------|-----------------------------------|--------------------------------|
 | `debugLogs`                      | boolean  | `false`                | Enable debug logging              | `CONFIG_DEBUG_LOGS`            |
 | `consoleLogFilter.enabled`       | boolean  | `false`                | Enable console log filtering      | `CONFIG_LOG_FILTER_ENABLED`    |
 | `consoleLogFilter.mode`          | string   | `"whitelist"`          | Filter mode (whitelist/blacklist) | `CONFIG_LOG_FILTER_MODE`       |
@@ -161,13 +161,13 @@ Edit `config.json` to customize behavior, or set `CONFIG_*` environment variable
 ### Proxy
 
 | Setting             | Type    | Default | Description                 | Docker environment variable |
-| ------------------- | ------- | ------- | --------------------------- | --------------------------- |
+|---------------------|---------|---------|-----------------------------|-----------------------------|
 | `proxy.queryEngine` | boolean | `true`  | Proxy query engine requests | `CONFIG_PROXY_QUERY_ENGINE` |
 
 ### Webhooks
 
 | Setting                                  | Type     | Default                                              | Description                       | Docker environment variable             |
-| ---------------------------------------- | -------- | ---------------------------------------------------- | --------------------------------- | --------------------------------------- |
+|------------------------------------------|----------|------------------------------------------------------|-----------------------------------|-----------------------------------------|
 | `webhook.discord.enabled`                | boolean  | `false`                                              | Enable Discord webhook            | `CONFIG_DISCORD_ENABLED`                |
 | `webhook.discord.url`                    | string   | `""`                                                 | Discord webhook URL               | `CONFIG_DISCORD_URL`                    |
 | `webhook.ntfy.enabled`                   | boolean  | `false`                                              | Enable ntfy notifications         | `CONFIG_NTFY_ENABLED`                   |

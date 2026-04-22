@@ -173,7 +173,7 @@ export class MicrosoftRewardsBot {
                 }
 
                 const log = msg.__ipcLog
-                if (log && typeof log.content === 'string') {
+                if (log && log.content) {
                     const { webhook } = this.config
                     const { content, level } = log
 

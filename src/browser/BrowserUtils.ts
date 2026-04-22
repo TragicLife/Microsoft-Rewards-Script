@@ -1,4 +1,4 @@
-import { type Page, type BrowserContext } from 'patchright'
+import { type BrowserContext, type Page } from 'patchright'
 import { CheerioAPI, load } from 'cheerio'
 import { ClickOptions, createCursor } from 'ghost-cursor-playwright-port'
 
@@ -95,11 +95,10 @@ export default class BrowserUtils {
             const pages = browser.pages()
 
             const newTab = pages[pages.length - 1]
-            if (!newTab) {
-                throw this.bot.logger.error(this.bot.isMobile, 'GET-NEW-TAB', 'No tabs could be found!')
-            }
+            if (newTab) return newTab
 
-            return newTab
+            this.bot.logger.error(this.bot.isMobile, 'GET-NEW-TAB', 'No tabs could be found!')
+            throw new Error('No tabs could be found!')
         } catch (error) {
             this.bot.logger.error(
                 this.bot.isMobile,
@@ -192,9 +191,7 @@ export default class BrowserUtils {
 
                 await Promise.allSettled(newTabPromises)
             }
-
-            const latestTab = await this.getLatestTab(page)
-            return latestTab
+            return await this.getLatestTab(page)
         } catch (error) {
             this.bot.logger.error(
                 this.bot.isMobile,
@@ -207,8 +204,7 @@ export default class BrowserUtils {
 
     async loadInCheerio(data: Page | string): Promise<CheerioAPI> {
         const html: string = typeof data === 'string' ? data : await data.content()
-        const $ = load(html)
-        return $
+        return load(html)
     }
 
     async ghostClick(page: Page, selector: string, options?: ClickOptions): Promise<boolean> {

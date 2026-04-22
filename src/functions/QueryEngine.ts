@@ -64,7 +64,7 @@ export class QueryCore {
                 const handler = sourceHandlers[source]
                 if (!handler) continue
 
-                const topics = await Promise.resolve(handler())
+                const topics = await handler()
                 if (topics.length) topicLists.push(topics)
             }
 

@@ -136,11 +136,8 @@ class Browser {
             operatingSystems: isMobile ? ['android', 'ios'] : ['windows', 'linux'],
             browsers: [{ name: 'edge' }]
         })
-
         const userAgentManager = new UserAgentManager(this.bot)
-        const updatedFingerPrintData = await userAgentManager.updateFingerprintUserAgent(fingerPrintData, isMobile)
-
-        return updatedFingerPrintData
+        return await userAgentManager.updateFingerprintUserAgent(fingerPrintData, isMobile)
     }
 }
 

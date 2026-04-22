@@ -45,12 +45,12 @@ export class Workers {
 
         const activitiesUncompleted: BasePromotion[] =
             morePromotions?.filter(x => {
-                if (x.complete) return false
-                if (x.pointProgressMax <= 0) return false
-                if (x.exclusiveLockedFeatureStatus === 'locked') return false
-                if (!x.promotionType) return false
-
-                return true
+                return (
+                    !x.complete &&
+                    x.pointProgressMax > 0 &&
+                    x.exclusiveLockedFeatureStatus !== 'locked' &&
+                    x.promotionType
+                )
             }) ?? []
 
         if (!activitiesUncompleted.length) {
@@ -75,12 +75,12 @@ export class Workers {
 
     public async doAppPromotions(data: AppDashboardData) {
         const appRewards = data.response.promotions.filter(x => {
-            if (x.attributes['complete']?.toLowerCase() !== 'false') return false
-            if (!x.attributes['offerid']) return false
-            if (!x.attributes['type']) return false
-            if (x.attributes['type'] !== 'sapphire') return false
-
-            return true
+            return (
+                x.attributes['complete']?.toLowerCase() === 'false' &&
+                x.attributes['offerid'] &&
+                x.attributes['type'] &&
+                x.attributes['type'] === 'sapphire'
+            )
         })
 
         if (!appRewards.length) {
@@ -182,11 +182,7 @@ export class Workers {
 
         const activitiesUncompleted: BasePromotion[] =
             punchCardActivities?.filter(x => {
-                if (x.complete) return false
-                if (x.exclusiveLockedFeatureStatus === 'locked') return false
-                if (!x.promotionType) return false
-
-                return true
+                return !x.complete && x.exclusiveLockedFeatureStatus !== 'locked' && x.promotionType
             }) ?? []
 
         if (!activitiesUncompleted.length) {

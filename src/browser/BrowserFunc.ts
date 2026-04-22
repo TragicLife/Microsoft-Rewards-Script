@@ -330,7 +330,7 @@ export default class BrowserFunc {
                     .filter(c => {
                         if (!allowedDomains || allowedDomains.length === 0) return true
                         return (
-                            typeof c.domain === 'string' &&
+                            c.domain &&
                             allowedDomains.some(d => c.domain.toLowerCase().endsWith(d.toLowerCase()))
                         )
                     })
