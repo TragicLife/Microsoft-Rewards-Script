@@ -16,3 +16,5 @@ logs/
 .stfolder/
 .env
 /.idea/
+/pnpm-lock.yaml
+/npm-lock.yaml
