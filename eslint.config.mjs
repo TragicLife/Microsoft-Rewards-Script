@@ -1,27 +1,30 @@
-import eslint from '@eslint/js'
+import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
+import prettier from 'eslint-config-prettier'
+import globals from 'globals'
 
 export default tseslint.config(
     {
-        ignores: ['dist/**', 'node_modules/**', '*.js', '*.mjs']
+        ignores: ['dist/**', 'node_modules/**', 'diagnostics/**', 'sessions/**', 'scripts/**']
     },
-    eslint.configs.recommended,
+    js.configs.recommended,
     ...tseslint.configs.recommended,
     {
-        files: ['**/*.ts'],
+        languageOptions: {
+            globals: {
+                ...globals.node,
+                ...globals.es2021
+            },
+            ecmaVersion: 2021,
+            sourceType: 'module'
+        },
         rules: {
-            'linebreak-style': ['error', 'unix'],
-            'quotes': ['error', 'single'],
-            'semi': ['error', 'never'],
-            '@typescript-eslint/no-explicit-any': [
-                'warn',
-                {
-                    fixToUnknown: false
-                }
-            ],
+            '@typescript-eslint/no-explicit-any': ['warn', { fixToUnknown: false }],
             'prefer-arrow-callback': 'error',
-            'no-empty': 'off'
+            'no-empty': 'off',
+            "preserve-caught-error": "off",
         }
-    }
+    },
+    // Must come last: disables ESLint rules that conflict with Prettier formatting
+    prettier
 )
-

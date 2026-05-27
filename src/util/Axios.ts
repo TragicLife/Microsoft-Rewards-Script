@@ -22,11 +22,11 @@ class AxiosClient {
         let urlObj: URL
         try {
             urlObj = new URL(baseUrl)
-        } catch (e) {
+        } catch {
             try {
                 urlObj = new URL(`http://${baseUrl}`)
-            } catch (error) {
-                throw new Error(`Invalid proxy URL format: ${baseUrl}, error: ${(error as Error).message}. Initial error: ${(e as Error).message}`)
+            } catch {
+                throw new Error(`Invalid proxy URL format: ${baseUrl}`)
             }
         }
 
